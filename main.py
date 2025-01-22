@@ -1,8 +1,26 @@
 import requests
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from tabulate import tabulate
 import matplotlib.pyplot as plt
+
+def main():
+    api_key = "c86b3c8c49a759cd21dbe280885047d9"
+    city = "Santiago, CL"
+
+    fetch_weather(api_key, city)
+
+    forecast_list = fetch_tomorrow_forecast(api_key, city)
+
+    time_list = extract_time_list(forecast_list)
+    temp_list = extract_temp_list(forecast_list)
+    tomorrow_min_max(temp_list)
+    plot_tomorrow_temp(temp_list, time_list)
+
+
+def rounded_int(n):
+    rounded_number = int(round(n, 0))
+    return rounded_number
+
 
 def fetch_weather(api_key, city):
     base_url = "https://api.openweathermap.org/data/2.5/weather"
@@ -17,7 +35,7 @@ def fetch_weather(api_key, city):
         data = response.json()
 
         weather_description = data["weather"][0]["description"]
-        temperature = data["main"]["temp"]
+        temperature = rounded_int(data["main"]["temp"])
         humidity = data["main"]["humidity"]
         wind_speed = data["wind"]["speed"]
         
@@ -61,8 +79,6 @@ def fetch_tomorrow_forecast(api_key, city):
         tomorrow = datetime.now() + timedelta(days=1)
         tomorrow_date = tomorrow.date()
 
-        print(f"Tomorrow's forecast {tomorrow_date}:")
-        
         forecasts = data["list"]
         forecast_list = []
         
@@ -81,46 +97,8 @@ def fetch_tomorrow_forecast(api_key, city):
                 forecast_dict["Temp"] = temp
                 forecast_dict["Hum"] = humidity
                 forecast_dict["Wind_speed"] = wind_speed
-                
                 forecast_list.append(forecast_dict)
-
-
-        temp_list = []
-        time_list = []
-        for p in forecast_list:
-            temp = p["Temp"]
-            temp_list.append(temp)
-            time = p["Time"]
-            time_list.append(time)
-
-        min_temp = min(temp_list)
-        max_temp = max(temp_list)
-
-        print("")
-        print(temp_list)
-        print("")
-        print(time_list)
-        print("")
-
-        print(f"Min temp: {min_temp}°c - Max temp: {max_temp}°c")
-        print("")
-
-        # Create the plot
-        plt.figure(figsize=(10, 5))  # Set the figure size
-        plt.plot(time_list, temp_list, marker='o', linestyle='-', color='blue', label='Temperature')
-
-        # Add labels and title
-        plt.title("Temperature Variation", fontsize=16)
-        plt.xlabel("Time (e.g., Hours)", fontsize=12)
-        plt.ylabel("Temperature (°C)", fontsize=12)
-
-        # Add grid and legend
-        plt.grid(alpha=0.5)
-        plt.legend()
-
-        # Show the plot
-        plt.show()
-
+        return forecast_list
 
     except requests.exceptions.RequestException as e:
         print(f"Error fetching weather data: {e}")
@@ -128,8 +106,49 @@ def fetch_tomorrow_forecast(api_key, city):
         print("Error: Unexpected response format. Please check the city name or API key.")
 
 
-api_key = "c86b3c8c49a759cd21dbe280885047d9"
-city = "Santiago, CL"
+def extract_time_list(forecast_list):
+    time_list = []
+    for p in forecast_list:
+        time = p["Time"]
+        time_list.append(time)
+    return time_list
 
-fetch_weather(api_key, city)
-fetch_tomorrow_forecast(api_key, city)
+
+def extract_temp_list(forecast_list):
+    temp_list = []
+    for p in forecast_list:
+        temp = p["Temp"]
+        temp_list.append(temp)
+    return temp_list
+
+
+def tomorrow_min_max(temp_list):
+    tomorrow = datetime.now() + timedelta(days=1)
+    tomorrow_date = tomorrow.date()
+    print(f"Tomorrow's forecast {tomorrow_date}:")
+
+    min_temp = rounded_int(min(temp_list))
+    max_temp = rounded_int(max(temp_list))
+    print(f"Min temp: {min_temp}°c - Max temp: {max_temp}°c")
+    print("")
+
+
+def plot_tomorrow_temp(temp_list, time_list):
+    # Create the plot
+    plt.figure(figsize=(10, 5))  # Set the figure size
+    plt.plot(time_list, temp_list, marker='o', linestyle='-', color='blue', label='Temperature')
+
+    # Add labels and title
+    plt.title("Temperature Variation", fontsize=16)
+    plt.xlabel("Time (e.g., Hours)", fontsize=12)
+    plt.ylabel("Temperature (°C)", fontsize=12)
+
+    # Add grid and legend
+    plt.grid(alpha=0.5)
+    plt.legend()
+
+    # Show the plot
+    plt.show()
+
+if __name__ == "__main__":
+    main()
