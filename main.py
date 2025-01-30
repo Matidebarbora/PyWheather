@@ -1,30 +1,45 @@
 import requests
+import os
+from dotenv import load_dotenv
 from colorama import init, Fore, Back, Style
 from tabulate import tabulate
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import matplotlib.pyplot as plt
 
+
+
 def main():
-    api_key = "c86b3c8c49a759cd21dbe280885047d9"
-    city = "Santiago, CL"
-    data = weather_json_data(api_key, city)
-    forecast_data = forecast_json_data(api_key, city)
+    option = input("Option: ")
+    
+    if option == "1":
+        load_dotenv("config.env")
+        API_KEY = os.getenv("OPENWEATHER_API_KEY")
+        city = "Santiago, CL"
+        data = weather_json_data(API_KEY, city)
+        forecast_data = forecast_json_data(API_KEY, city)
+        forecasts = fetch_tomorrow_forecast(forecast_data)
 
-    fetch_weather(data, city)
+        print(f"{Fore.GREEN}")
+        fetch_weather(data, city)
+        
+        print(f"{Fore.YELLOW}")
+        tomorrow_min_max(forecasts, 1)
+        tomorrow_min_max(forecasts, 2)
+        tomorrow_min_max(forecasts, 3)
+        tomorrow_min_max(forecasts, 4)
+        tomorrow_min_max(forecasts, 5)
+        print(f"{Fore.WHITE}")
 
-    forecasts = fetch_tomorrow_forecast(forecast_data)
+        # print(tabulate(forecast_list))
+        # time_list = extract_time_list(forecast_list)
+        # plot_tomorrow_temp(temp_list, time_list)
+    
+    elif option == "2":
+        load_dotenv("config.env")
 
-    tomorrow_min_max(forecasts, 1)
-    tomorrow_min_max(forecasts, 2)
-    tomorrow_min_max(forecasts, 3)
-    tomorrow_min_max(forecasts, 4)
-    tomorrow_min_max(forecasts, 5)
-    print(f"{Fore.WHITE}")
-
-    # print(tabulate(forecast_list))
-    # time_list = extract_time_list(forecast_list)
-    # plot_tomorrow_temp(temp_list, time_list)
+        API_KEY = os.getenv("OPENWEATHER_API_KEY")
+        print(f"🔍 API Key Loaded: {API_KEY}")  # Debugging print
 
 
 def rounded_int(n):
@@ -89,11 +104,9 @@ def fetch_weather(data, city):
     formatted_sunset = local_sunset.strftime("%H:%M:%S")
     #formatted_sunrise = local_sunrise.strftime("%Y-%m-%d %H:%M:%S")
     
-    print("")
-    print(f"{Fore.GREEN}Weather in {city.capitalize()}:")
+    print(f"Weather in {city.capitalize()}:")
     print(f"{weather_description.capitalize()} - Temp: {temperature}°C - Hum: {humidity}% - Wind Speed: {wind_speed} m/s")
-    print(f"Sunrise: {formatted_sunrise} - Sunset: {formatted_sunset}{Fore.YELLOW}")
-    print("")
+    print(f"Sunrise: {formatted_sunrise} - Sunset: {formatted_sunset}")
 
 
 def fetch_tomorrow_forecast(data):
